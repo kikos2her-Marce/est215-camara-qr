@@ -100,7 +100,24 @@ lectorQR.start(
   function(errorLectura) {
     // Mientras no encuentre un QR continúa escaneando.
   }
-).catch(function(error) {
+).then(function() {
+
+  setTimeout(function() {
+
+    const video = document.querySelector("#reader video");
+
+    if (video) {
+      document.getElementById("resultado").innerHTML =
+        "Esperando lectura de credencial...<br><br>" +
+        "<span style='font-size:16px;font-weight:normal;'>" +
+        "Resolución real: " +
+        video.videoWidth + " × " + video.videoHeight +
+        "</span>";
+    }
+
+  }, 1500);
+
+}).catch(function(error) {
 
   document.getElementById("resultado").innerHTML =
     "No fue posible iniciar la cámara.<br><br>" +

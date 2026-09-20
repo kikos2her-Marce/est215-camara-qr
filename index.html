@@ -7,6 +7,7 @@
   <title>Cámara QR - EST 215</title>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <style>
     body {
@@ -33,6 +34,7 @@
     #reader {
       width: 100%;
       margin-top: 25px;
+      object-fit: contain;
     }
 
     #resultado {
@@ -54,7 +56,7 @@
 
     <h2>Escáner con cámara</h2>
 
-    <div id="reader"></div>
+    <video id="reader" autoplay muted playsinline></video>
 
     <div id="resultado">
       Esperando lectura de credencial...
@@ -71,60 +73,48 @@
 
     }
 
-    const lectorQR = new Html5Qrcode("reader");
+    const lectorZXing = new ZXing.BrowserQRCodeReader();
 
-const configuracion = {
-  fps: 15,
-  qrbox: function(viewfinderWidth, viewfinderHeight) {
-    const ancho = Math.floor(viewfinderWidth * 0.50);
-    const alto = Math.floor(viewfinderHeight * 0.50);
+document.getElementById("resultado").innerHTML =
+  "Iniciando cámara...";
 
-    return {
-      width: ancho,
-      height: alto
-    };
-  },
-  aspectRatio: 1.777778
-};
+lectorZXing
+  .decodeFromConstraints(
+    {
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    },
+    "reader",
+    function(resultado, error) {
 
-const camara = {
-  facingMode: "environment"
-};
+      if (resultado) {
 
-lectorQR.start(
-  camara,
-  configuracion,
-  function(textoQR) {
-    qrLeido(textoQR);
-  },
-  function(errorLectura) {
-    // Mientras no encuentre un QR continúa escaneando.
-  }
-).then(function() {
+        const textoQR = resultado.getText();
 
-  setTimeout(function() {
+        document.getElementById("resultado").innerHTML =
+          "✓ QR detectado<br><br>" + textoQR;
 
-    const video = document.querySelector("#reader video");
+        qrLeido(textoQR);
+      }
 
-    if (video) {
-      document.getElementById("resultado").innerHTML =
-        "Esperando lectura de credencial...<br><br>" +
-        "<span style='font-size:16px;font-weight:normal;'>" +
-        "Resolución real: " +
-        video.videoWidth + " × " + video.videoHeight +
-        "</span>";
+      if (
+        error &&
+        !(error instanceof ZXing.NotFoundException)
+      ) {
+        console.log(error);
+      }
     }
+  )
+  .catch(function(error) {
 
-  }, 1500);
+    document.getElementById("resultado").innerHTML =
+      "No fue posible iniciar la cámara.<br><br>" +
+      error;
 
-}).catch(function(error) {
-
-  document.getElementById("resultado").innerHTML =
-    "No fue posible iniciar la cámara.<br><br>" +
-    error;
-
-});
-
+  });
   </script>
 
 </body>
